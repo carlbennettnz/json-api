@@ -33,8 +33,10 @@ var _modelsOrganization2 = _interopRequireDefault(_modelsOrganization);
 /*eslint-disable new-cap */
 var ObjectId = _mongoose2["default"].Types.ObjectId;
 var govtId = ObjectId("54419d550a5069a2129ef254");
+var otherGovtId = ObjectId("54419d550a5069a2129ef255");
 var smithId = ObjectId("53f54dd98d1e62ff12539db2");
 var doeId = ObjectId("53f54dd98d1e62ff12539db3");
+var stateCollegeId = ObjectId("53f54dd98d1e62ff12539db4");
 /*eslint-enable new-cap */
 
 var OrganizationModel = _modelsOrganization2["default"].model;
@@ -48,8 +50,8 @@ var _models = {
 
 _nodeMongooseFixtures2["default"].save("all", {
   Person: [{ name: "John Smith", email: "jsmith@gmail.com", gender: "male", _id: smithId }, { name: "Jane Doe", gender: "female", _id: doeId }, { name: "Doug Wilson", gender: "male" }],
-  Organization: [{ name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId }],
-  School: [{ name: "City College", description: "Just your average local college.", liaisons: [smithId] }, { name: "State College", description: "Just your average state college." }]
+  Organization: [{ name: "State Government", description: "Representing the good people.", liaisons: [doeId, smithId], _id: govtId }, { name: "Other State Government", description: "Representing the other good people.", _id: otherGovtId }],
+  School: [{ name: "City College", description: "Just your average local college.", liaisons: [smithId] }, { name: "State College", description: "Just your average state college.", _id: stateCollegeId }]
 });
 
 /**
