@@ -18,9 +18,9 @@ var _typesResource = require("../../types/Resource");
 
 var _typesResource2 = _interopRequireDefault(_typesResource);
 
-var _typesRelationshipObject = require("../../types/RelationshipObject");
+var _typesRelationship = require("../../types/Relationship");
 
-var _typesRelationshipObject2 = _interopRequireDefault(_typesRelationshipObject);
+var _typesRelationship2 = _interopRequireDefault(_typesRelationship);
 
 var _typesLinkage = require("../../types/Linkage");
 
@@ -41,15 +41,23 @@ exports["default"] = function (data, parseAsLinkage) {
         resolve(resourceFromJSON(data));
       }
     } catch (error) {
-      var title = "The resources you provided could not be parsed.";
-      var details = "The precise error was: \"" + error.message + "\".";
-      reject(new _typesAPIError2["default"](400, undefined, title, details));
+      if (error instanceof _typesAPIError2["default"]) {
+        reject(error);
+      } else {
+        var title = "The resources you provided could not be parsed.";
+        var details = "The precise error was: \"" + error.message + "\".";
+        reject(new _typesAPIError2["default"](400, undefined, title, details));
+      }
     }
   });
 };
 
-function relationshipObjectFromJSON(json) {
-  return new _typesRelationshipObject2["default"](linkageFromJSON(json.data));
+function relationshipFromJSON(json) {
+  if (typeof json.data === "undefined") {
+    throw new _typesAPIError2["default"](400, undefined, "Missing relationship linkage.");
+  }
+
+  return new _typesRelationship2["default"](linkageFromJSON(json.data));
 }
 
 function linkageFromJSON(json) {
@@ -59,9 +67,15 @@ function linkageFromJSON(json) {
 function resourceFromJSON(json) {
   var relationships = json.relationships || {};
 
-  //build RelationshipObjects
-  for (var key in relationships) {
-    relationships[key] = relationshipObjectFromJSON(relationships[key]);
+  //build Relationships
+  var key = undefined;
+  try {
+    for (key in relationships) {
+      relationships[key] = relationshipFromJSON(relationships[key], key);
+    }
+  } catch (e) {
+    e.details = "No data was found for the " + key + " relationship.";
+    throw e;
   }
 
   return new _typesResource2["default"](json.type, json.id, json.attributes, relationships, json.meta);

@@ -8,7 +8,8 @@ Object.defineProperty(exports, "__esModule", {
 var VALID_ORG_RESOURCE_NO_ID = {
   "type": "organizations",
   "attributes": {
-    "name": "Test Organization"
+    "name": "Test Organization",
+    "modified": "2015-01-01T00:00:00.000Z"
   },
   "relationships": {
     "liaisons": {
@@ -30,4 +31,14 @@ var VALID_SCHOOL_RESOURCE_NO_ID = {
     "name": "Test School"
   }
 };
+
 exports.VALID_SCHOOL_RESOURCE_NO_ID = VALID_SCHOOL_RESOURCE_NO_ID;
+var INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP = {
+  "type": "organizations",
+  "relationships": {
+    "liaisons": {
+      "type": "people", "id": "53f54dd98d1e62ff12539db3"
+    }
+  }
+};
+exports.INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP = INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP;

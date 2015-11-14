@@ -1,6 +1,4 @@
 import { Promise } from "q";
-import API from "../../../../../index";
-let APIError = API.types.Error;
 
 module.exports = {
   parentType: "organizations",
@@ -25,14 +23,10 @@ module.exports = {
     }
   },
 
-  beforeSave(resource) {
+  beforeSave: function(resource, req, res, superFn) {
     return new Promise((resolve, reject) => {
-      resource.attrs.description = "Modified in a Promise";
+      resource.attrs.modified = new Date("2015-10-27T05:16:57.257Z");
       resolve(resource);
-    });
-  },
-
-  beforeDelete(resource) {
-    throw new APIError(403, undefined, "You are not allowed to delete schools.");
+    }).then((transformed) => superFn(transformed, req, res));
   }
 };

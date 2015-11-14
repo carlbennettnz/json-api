@@ -54,9 +54,9 @@ var _typesLinkage = require("../../types/Linkage");
 
 var _typesLinkage2 = _interopRequireDefault(_typesLinkage);
 
-var _typesRelationshipObject = require("../../types/RelationshipObject");
+var _typesRelationship = require("../../types/Relationship");
 
-var _typesRelationshipObject2 = _interopRequireDefault(_typesRelationshipObject);
+var _typesRelationship2 = _interopRequireDefault(_typesRelationship);
 
 var _typesAPIError = require("../../types/APIError");
 
@@ -176,6 +176,10 @@ var MongooseAdapter = (function () {
           var includedResources = [];
           primaryDocumentsPromise = (0, _q2["default"])(queryBuilder.exec()).then(function (docs) {
             (0, _utilTypeHandling.forEachArrayOrVal)(docs, function (doc) {
+              // There's no gaurantee that the doc (or every doc) was found
+              // and we can't populate paths on a non-existent doc.
+              if (!doc) return;
+
               populatedPaths.forEach(function (path) {
                 // if it's a toOne relationship, doc[path] will be a doc or undefined;
                 // if it's a toMany relationship, we have an array (or undefined).
@@ -326,7 +330,7 @@ var MongooseAdapter = (function () {
           var currentModelName = currDoc.constructor.modelName;
           var newModelName = _this3.constructor.getModelName(newResource.type, singular);
           if (currentModelName !== newModelName) {
-            var newDoc = currDoc.toObject();
+            var newDoc = currDoc.toObject({ virtuals: true, getters: true });
             var NewModelConstructor = _this3.getModel(newModelName);
             newDoc[currDoc.constructor.schema.options.discriminatorKey] = newModelName;
 
@@ -495,7 +499,7 @@ var MongooseAdapter = (function () {
       // That's stupid, and it breaks our include handling.
       // Also, starting in 4.0, we won't need the delete versionKey line:
       // https://github.com/Automattic/mongoose/issues/2675
-      var attrs = doc.toJSON({ virtuals: true });
+      var attrs = doc.toJSON({ virtuals: true, getters: true });
       delete attrs.id; // from the id virtual.
       delete attrs._id;
       delete attrs[schemaOptions.versionKey];
@@ -540,11 +544,11 @@ var MongooseAdapter = (function () {
         (0, _utilMisc.deleteNested)(path, attrs);
 
         // Now, since the value wasn't excluded, we need to build its
-        // RelationshipObject. Note: the value could still be null or an empty
-        // array. And, because of of population, it could be a single document or
-        // array of documents, in addition to a single/array of ids. So, as is
-        // customary, we'll start by coercing it to an array no matter what,
-        // tracking whether to make it a non-array at the end, to simplify our code.
+        // Relationship. Note: the value could still be null or an empty array.
+        // And, because of population, it could be a single document or array of
+        // documents, in addition to a single/array of ids. So, as is customary,
+        // we'll start by coercing it to an array no matter what, tracking
+        // whether to make it a non-array at the end, to simplify our code.
         var isToOneRelationship = false;
 
         if (!Array.isArray(jsonValAtPath)) {
@@ -569,7 +573,7 @@ var MongooseAdapter = (function () {
 
         // go back from an array if neccessary and save.
         linkage = new _typesLinkage2["default"](isToOneRelationship ? linkage[0] : linkage);
-        relationships[path] = new _typesRelationshipObject2["default"](linkage);
+        relationships[path] = new _typesRelationship2["default"](linkage);
       });
 
       // finally, create the resource.
@@ -657,11 +661,15 @@ var MongooseAdapter = (function () {
           defaultVal = type.options["default"];
         }
 
+        // find the "base type's" options (used below), in case
+        // we have an array of values of the same type at this path.
+        var baseTypeOptions = Array.isArray(type.options.type) ? type.options.type[0] : type.options;
+
         // Add validation info
         var validationRules = {
           required: !!type.options.required,
-          oneOf: type.options["enum"] ? type.enumValues : undefined,
-          max: type.options.max ? type.options.max : undefined
+          oneOf: baseTypeOptions["enum"] ? type.enumValues || type.caster && type.caster.enumValues : undefined,
+          max: type.options.max || undefined
         };
 
         type.validators.forEach(function (validator) {

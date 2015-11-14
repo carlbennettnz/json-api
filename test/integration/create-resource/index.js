@@ -3,14 +3,15 @@ import AgentPromise from "../../app/agent";
 import {
   ORG_RESOURCE_CLIENT_ID,
   VALID_ORG_RESOURCE_NO_ID_EXTRA_MEMBER,
-  VALID_SCHOOL_RESOURCE_NO_ID
+  VALID_SCHOOL_RESOURCE_NO_ID,
+  INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP
 } from "../fixtures/creation";
 
 describe("Creating Resources", () => {
   let Agent;
 
   describe("Creating a Valid Resource (With an Extra Member)", () => {
-    let createdResource, createdId, res;
+    let createdResource, res;
     before(done => {
       AgentPromise.then((A) => {
         Agent = A;
@@ -21,7 +22,6 @@ describe("Creating Resources", () => {
           .then((response) => {
             res = response;
             createdResource = res.body.data;
-            createdId = res.body.data.id;
             done();
           });
       }).catch(done);
@@ -59,15 +59,17 @@ describe("Creating Resources", () => {
       describe("beforeSave", () => {
         it("should execute beforeSave hook", () => {
           expect(createdResource.attributes.description).to.equal("Added a description in beforeSave");
+          expect(createdResource.attributes.modified).to.equal("2015-01-01T00:00:00.000Z");
         });
 
-        it("should allow beforeSave to return a Promise", (done) => {
+        it("should allow beforeSave to return a Promise and support super()", (done) => {
           Agent.request("POST", "/schools")
             .type("application/vnd.api+json")
             .send({"data": VALID_SCHOOL_RESOURCE_NO_ID})
             .promise()
             .then((response) => {
-              expect(response.body.data.attributes.description).to.equal("Modified in a Promise");
+              expect(response.body.data.attributes.description).to.equal("Added a description in beforeSave");
+              expect(response.body.data.attributes.modified).to.equal("2015-10-27T05:16:57.257Z");
               done();
             }, done).catch(done);
         });
@@ -97,10 +99,13 @@ describe("Creating Resources", () => {
         .type("application/vnd.api+json")
         .send({"data": ORG_RESOURCE_CLIENT_ID})
         .promise()
-        .then(() => done("Should not run!"), (error) => {
-          err = error;
-          done();
-        });
+        .then(
+          () => { done("Should not run!"); },
+          (error) => {
+            err = error;
+            done();
+          }
+        );
     });
 
     describe("HTTP", () => {
@@ -112,6 +117,45 @@ describe("Creating Resources", () => {
     describe("Document Structure", () => {
       it("should contain an error", () => {
         expect(err.response.body.errors).to.be.an("array");
+      });
+    });
+  });
+
+  describe("Creating a Resource With a Missing Relationship Data Key", () => {
+    let err;
+    before((done) => {
+      Agent.request("POST", "/organizations")
+        .type("application/vnd.api+json")
+        .send({"data": INVALID_ORG_RESOURCE_NO_DATA_IN_RELATIONSHIP})
+        .promise()
+        .then(
+          () => { done("Should not run!"); },
+          (error) => {
+            err = error;
+            done();
+          }
+        );
+    });
+
+    describe("HTTP", () => {
+      it("should return 400", () => {
+        expect(err.response.status).to.equal(400);
+      });
+    });
+
+    describe("Document Structure", () => {
+      it("should contain an error", () => {
+        expect(err.response.body.errors).to.be.an("array");
+      });
+    });
+
+    describe("The error", () => {
+      it("should have the correct title", () => {
+        expect(err.response.body.errors[0].title).to.be.equal("Missing relationship linkage.");
+      });
+
+      it("should have the correct details", () => {
+        expect(err.response.body.errors[0].details).to.be.equal("No data was found for the liaisons relationship.");
       });
     });
   });

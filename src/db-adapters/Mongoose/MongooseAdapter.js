@@ -8,7 +8,7 @@ import pluralize from "pluralize";
 import Resource from "../../types/Resource";
 import Collection from "../../types/Collection";
 import Linkage from "../../types/Linkage";
-import RelationshipObject from "../../types/RelationshipObject";
+import Relationship from "../../types/Relationship";
 import APIError from "../../types/APIError";
 import FieldDocumentation from "../../types/Documentation/Field";
 import FieldTypeDocumentation from "../../types/Documentation/FieldType";
@@ -35,7 +35,6 @@ export default class MongooseAdapter {
     const [mode, idQuery] = this.constructor.getIdQueryType(idOrIds);
     const pluralizer = this.inflector.plural;
     let primaryDocumentsPromise, includedResourcesPromise = Q(null);
-
 
 
     queryBuilder[mode](idQuery);
@@ -100,6 +99,10 @@ export default class MongooseAdapter {
       let includedResources = [];
       primaryDocumentsPromise = Q(queryBuilder.exec()).then((docs) => {
         forEachArrayOrVal(docs, (doc) => {
+          // There's no gaurantee that the doc (or every doc) was found
+          // and we can't populate paths on a non-existent doc.
+          if(!doc) return;
+
           populatedPaths.forEach((path) => {
             // if it's a toOne relationship, doc[path] will be a doc or undefined;
             // if it's a toMany relationship, we have an array (or undefined).
@@ -237,7 +240,7 @@ export default class MongooseAdapter {
         const currentModelName = currDoc.constructor.modelName;
         const newModelName = this.constructor.getModelName(newResource.type, singular);
         if(currentModelName !== newModelName) {
-          const newDoc = currDoc.toObject();
+          const newDoc = currDoc.toObject({virtuals: true, getters: true});
           const NewModelConstructor = this.getModel(newModelName);
           newDoc[currDoc.constructor.schema.options.discriminatorKey] = newModelName;
 
@@ -388,7 +391,7 @@ export default class MongooseAdapter {
     // That's stupid, and it breaks our include handling.
     // Also, starting in 4.0, we won't need the delete versionKey line:
     // https://github.com/Automattic/mongoose/issues/2675
-    let attrs = doc.toJSON({virtuals: true});
+    let attrs = doc.toJSON({virtuals: true, getters: true});
     delete attrs.id; // from the id virtual.
     delete attrs._id;
     delete attrs[schemaOptions.versionKey];
@@ -429,11 +432,11 @@ export default class MongooseAdapter {
       deleteNested(path, attrs);
 
       // Now, since the value wasn't excluded, we need to build its
-      // RelationshipObject. Note: the value could still be null or an empty
-      // array. And, because of of population, it could be a single document or
-      // array of documents, in addition to a single/array of ids. So, as is
-      // customary, we'll start by coercing it to an array no matter what,
-      // tracking whether to make it a non-array at the end, to simplify our code.
+      // Relationship. Note: the value could still be null or an empty array.
+      // And, because of population, it could be a single document or array of
+      // documents, in addition to a single/array of ids. So, as is customary,
+      // we'll start by coercing it to an array no matter what, tracking
+      // whether to make it a non-array at the end, to simplify our code.
       let isToOneRelationship = false;
 
       if(!Array.isArray(jsonValAtPath)) {
@@ -460,7 +463,7 @@ export default class MongooseAdapter {
 
       // go back from an array if neccessary and save.
       linkage = new Linkage(isToOneRelationship ? linkage[0] : linkage);
-      relationships[path] = new RelationshipObject(linkage);
+      relationships[path] = new Relationship(linkage);
     });
 
     // finally, create the resource.
@@ -534,11 +537,15 @@ export default class MongooseAdapter {
         defaultVal = type.options.default;
       }
 
+      // find the "base type's" options (used below), in case
+      // we have an array of values of the same type at this path.
+      let baseTypeOptions = Array.isArray(type.options.type) ? type.options.type[0] : type.options;
+
       // Add validation info
       let validationRules = {
         required: !!type.options.required,
-        oneOf: type.options.enum ? type.enumValues : undefined,
-        max: type.options.max ? type.options.max : undefined
+        oneOf: baseTypeOptions.enum ? type.enumValues || (type.caster && type.caster.enumValues) : undefined,
+        max: type.options.max || undefined
       };
 
       type.validators.forEach((validator) => {
