@@ -16,7 +16,6 @@ before((done) => {
       require("./content-negotiation");
       require("./fetch-collection");
       require("./create-resource");
-      require("./delete-resource");
       require("./documentation");
       done();
     }).done();
