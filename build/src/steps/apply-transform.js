@@ -14,6 +14,10 @@ var _typesCollection = require("../types/Collection");
 
 var _typesCollection2 = _interopRequireDefault(_typesCollection);
 
+var _typesAPIError = require("../types/APIError");
+
+var _typesAPIError2 = _interopRequireDefault(_typesAPIError);
+
 var _q = require("q");
 
 /**
@@ -22,7 +26,15 @@ var _q = require("q");
 
 exports["default"] = function (toTransform, mode, registry, frameworkReq, frameworkRes) {
   if (toTransform instanceof _typesResource2["default"]) {
-    return transform(toTransform, frameworkReq, frameworkRes, mode, registry);
+    var doTransform = transform(toTransform, frameworkReq, frameworkRes, mode, registry);
+
+    return _q.Promise.resolve(doTransform).then(function (transformed) {
+      if (transformed == null) {
+        throw new _typesAPIError2["default"](403, undefined, 'Forbidden');
+      } else {
+        return transformed;
+      }
+    });
   } else if (toTransform instanceof _typesCollection2["default"]) {
     // below, allow the user to return undefined to remove a vlaue.
     return _q.Promise.all(toTransform.resources.map(function (it) {
