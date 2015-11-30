@@ -1,5 +1,6 @@
 import Resource from "../types/Resource";
 import Collection from "../types/Collection";
+import APIError from "../types/APIError";
 import { Promise } from "q";
 
 /**
@@ -7,7 +8,15 @@ import { Promise } from "q";
  */
 export default function(toTransform, mode, registry, frameworkReq, frameworkRes) {
   if(toTransform instanceof Resource) {
-    return transform(toTransform, frameworkReq, frameworkRes, mode, registry);
+    const doTransform = transform(toTransform, frameworkReq, frameworkRes, mode, registry);
+
+    return Promise.resolve(doTransform).then(transformed => {
+      if (transformed == null) {
+        throw new APIError(403, undefined, 'Forbidden');
+      } else {
+        return transformed;
+      }
+    });
   }
 
   else if (toTransform instanceof Collection) {
