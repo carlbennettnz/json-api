@@ -70,6 +70,10 @@ var _stepsApplyTransform = require("../steps/apply-transform");
 
 var _stepsApplyTransform2 = _interopRequireDefault(_stepsApplyTransform);
 
+var _stepsTriggerHook = require("../steps/trigger-hook");
+
+var _stepsTriggerHook2 = _interopRequireDefault(_stepsTriggerHook);
+
 var _stepsDoQueryDoGet = require("../steps/do-query/do-get");
 
 var _stepsDoQueryDoGet2 = _interopRequireDefault(_stepsDoQueryDoGet);
@@ -302,14 +306,18 @@ var APIController = (function () {
 
             case 64:
               context$3$0.next = 66;
-              return (0, _stepsApplyTransform2["default"])(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
+              return (0, _stepsTriggerHook2["default"])(response.primary, "afterSave", registry, frameworkReq, frameworkRes);
 
             case 66:
+              context$3$0.next = 68;
+              return (0, _stepsApplyTransform2["default"])(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
+
+            case 68:
               response.primary = context$3$0.sent;
-              context$3$0.next = 69;
+              context$3$0.next = 71;
               return (0, _stepsApplyTransform2["default"])(response.included, "beforeRender", registry, frameworkReq, frameworkRes);
 
-            case 69:
+            case 71:
               response.included = context$3$0.sent;
 
               if (response.status !== 204) {
@@ -318,7 +326,7 @@ var APIController = (function () {
 
               return context$3$0.abrupt("return", response);
 
-            case 72:
+            case 74:
             case "end":
               return context$3$0.stop();
           }

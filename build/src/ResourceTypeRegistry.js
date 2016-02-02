@@ -28,7 +28,7 @@ var _utilTypeHandling = require("./util/type-handling");
  * same format. Those getters will take the name of the resource type whose
  * property is being retrieved.
  */
-var autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender", "beforeDelete", "behaviors", "labelMappers", "defaultIncludes", "info", "parentType"];
+var autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender", "beforeDelete", "afterSave", "behaviors", "labelMappers", "defaultIncludes", "info", "parentType"];
 
 /**
  * Global defaults for all resource descriptions, to be merged into the
