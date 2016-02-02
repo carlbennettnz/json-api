@@ -16,6 +16,7 @@ import parseRequestPrimary from "../steps/pre-query/parse-request-primary";
 import validateRequestDocument from "../steps/pre-query/validate-document";
 import validateRequestResources from "../steps/pre-query/validate-resources";
 import applyTransform from "../steps/apply-transform";
+import triggerHook from "../steps/trigger-hook";
 
 import doGET from "../steps/do-query/do-get";
 import doPOST from "../steps/do-query/do-post";
@@ -183,6 +184,8 @@ class APIController {
         response.body = new Document(response.errors).get(true);
         return response;
       }
+
+      yield triggerHook(response.primary, "afterSave", registry, frameworkReq, frameworkRes);
 
       // apply transforms pre-send
       response.primary = yield applyTransform(

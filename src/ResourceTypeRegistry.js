@@ -8,8 +8,18 @@ import {Maybe} from "./util/type-handling";
  * same format. Those getters will take the name of the resource type whose
  * property is being retrieved.
  */
-const autoGetterProps = ["dbAdapter", "beforeSave", "beforeRender", "beforeDelete",
-  "behaviors", "labelMappers", "defaultIncludes", "info", "parentType"];
+const autoGetterProps = [
+  "dbAdapter",
+  "beforeSave",
+  "beforeRender",
+  "beforeDelete",
+  "afterSave",
+  "behaviors",
+  "labelMappers",
+  "defaultIncludes",
+  "info",
+  "parentType"
+];
 
 /**
  * Global defaults for all resource descriptions, to be merged into the
