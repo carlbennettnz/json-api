@@ -1,5 +1,5 @@
-export default function(resource, hook, registry, frameworkReq, frameworkRes) {
-  let fn = registry[hook](resource.type);
+export default function(type, resource, hook, registry, frameworkReq, frameworkRes) {
+  let fn = registry[hook](type);
 
   if (!fn) {
     return Promise.resolve([]);

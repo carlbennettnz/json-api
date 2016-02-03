@@ -185,7 +185,7 @@ class APIController {
         return response;
       }
 
-      yield triggerHook(response.primary, "afterSave", registry, frameworkReq, frameworkRes);
+      yield triggerHook(request.type, response.primary, "afterSave", registry, frameworkReq, frameworkRes);
 
       // apply transforms pre-send
       response.primary = yield applyTransform(
