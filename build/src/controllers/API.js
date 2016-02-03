@@ -306,7 +306,7 @@ var APIController = (function () {
 
             case 64:
               context$3$0.next = 66;
-              return (0, _stepsTriggerHook2["default"])(response.primary, "afterSave", registry, frameworkReq, frameworkRes);
+              return (0, _stepsTriggerHook2["default"])(request.type, response.primary, "afterSave", registry, frameworkReq, frameworkRes);
 
             case 66:
               context$3$0.next = 68;

@@ -6,8 +6,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-exports["default"] = function (resource, hook, registry, frameworkReq, frameworkRes) {
-  var fn = registry[hook](resource.type);
+exports["default"] = function (type, resource, hook, registry, frameworkReq, frameworkRes) {
+  var fn = registry[hook](type);
 
   if (!fn) {
     return _Promise.resolve([]);
