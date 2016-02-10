@@ -305,19 +305,24 @@ var APIController = (function () {
               return context$3$0.abrupt("return", response);
 
             case 64:
-              context$3$0.next = 66;
+              if (!(request.method === "post" || request.method === "patch" || request.method === "delete")) {
+                context$3$0.next = 67;
+                break;
+              }
+
+              context$3$0.next = 67;
               return (0, _stepsTriggerHook2["default"])(request.type, response.primary, "afterSave", registry, frameworkReq, frameworkRes);
 
-            case 66:
-              context$3$0.next = 68;
+            case 67:
+              context$3$0.next = 69;
               return (0, _stepsApplyTransform2["default"])(response.primary, "beforeRender", registry, frameworkReq, frameworkRes);
 
-            case 68:
+            case 69:
               response.primary = context$3$0.sent;
-              context$3$0.next = 71;
+              context$3$0.next = 72;
               return (0, _stepsApplyTransform2["default"])(response.included, "beforeRender", registry, frameworkReq, frameworkRes);
 
-            case 71:
+            case 72:
               response.included = context$3$0.sent;
 
               if (response.status !== 204) {
@@ -326,7 +331,7 @@ var APIController = (function () {
 
               return context$3$0.abrupt("return", response);
 
-            case 74:
+            case 75:
             case "end":
               return context$3$0.stop();
           }
