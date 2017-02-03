@@ -121,7 +121,7 @@ var BaseStrategy = (function () {
           reject(new _typesAPIError2["default"](400, undefined, "Cannot tunnel to the method \"" + requestedMethod.toUpperCase() + "\"."));
         }
 
-        if (hasBody(req)) {
+        if (hasNonEmptyBody(req)) {
           if (!isReadableStream(req)) {
             return reject(new _typesAPIError2["default"](500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body."));
           }
@@ -175,8 +175,8 @@ var BaseStrategy = (function () {
 
 exports["default"] = BaseStrategy;
 
-function hasBody(req) {
-  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]);
+function hasNonEmptyBody(req) {
+  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]) && req.headers["content-length"] > 0;
 }
 
 function isReadableStream(req) {

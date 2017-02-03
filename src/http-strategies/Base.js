@@ -88,7 +88,7 @@ export default class BaseStrategy {
         );
       }
 
-      if(hasBody(req)) {
+      if(hasNonEmptyBody(req)) {
         if(!isReadableStream(req)) {
           return reject(
             new APIError(500, undefined, "Request body could not be parsed. Make sure other no other middleware has already parsed the request body.")
@@ -146,8 +146,9 @@ export default class BaseStrategy {
   }
 }
 
-function hasBody(req) {
-  return req.headers["transfer-encoding"] !== undefined || !isNaN(req.headers["content-length"]);
+function hasNonEmptyBody(req) {
+  return req.headers["transfer-encoding"] !== undefined
+    || (!isNaN(req.headers["content-length"]) && req.headers["content-length"] > 0);
 }
 
 function isReadableStream(req) {
