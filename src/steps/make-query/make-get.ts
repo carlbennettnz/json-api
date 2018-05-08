@@ -20,7 +20,7 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
 
     const {
       include = registry.defaultIncludes(type),
-      page: { offset, limit } = { offset: undefined, limit: undefined },
+      page: { offset = undefined, limit = registry.pagination(type).defaultPageSize } = {},
       fields,
       sort,
       filter

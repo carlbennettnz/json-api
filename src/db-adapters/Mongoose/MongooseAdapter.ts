@@ -62,6 +62,7 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   // models keyed by model name b/c that's how mongoose stores them.
   protected typeNamesToModelNames: { [typeName: string]: string | undefined };
   protected modelNamesToTypeNames: { [modelName: string]: string | undefined };
+  protected maxPageSizes: { [typeName: string]: number } = {};
 
   constructor(
     protected models: { [modelName: string]: Model<any> } = (mongoose as any).models,
@@ -98,14 +99,9 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   }
 
   /**
-   * Returns a Promise for an array of 3 items: the primary resources (either
-   * a single Resource or a Collection); the included resources, as an array;
+   * Returns a Promise for the primary resources, the included resources,
    * and the size of the full collection, if the primary resources represent
-   * a paginated view of some collection.
-   *
-   * Note: The correct behavior if idOrIds is an empty array is to return no
-   * documents, as happens below. If it's undefined, though, we're not filtering
-   * by id and should return all documents.
+   * a paginated view of the collection.
    */
   async find(query: FindQuery) {
     const {
@@ -114,8 +110,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       select: fields,
       sort: sorts,
       offset,
-      limit,
-      isSingular: singular
+      isSingular: singular,
+      ignoreLimitMax
     } = query;
 
     const mode = singular ? "findOne" : "find";
@@ -124,6 +120,22 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const model = this.getModel(type);
 
     this.constructor.assertIdsValid(filters, singular);
+
+    // Enforce max limit if necessary.
+    let { limit } = query;
+    const maxLimit = this.maxPageSizes[type];
+    if(typeof maxLimit === 'number' && !ignoreLimitMax) {
+      if(typeof limit === 'undefined') {
+        limit = maxLimit;
+      }
+
+      else if (limit > maxLimit) {
+        throw Errors.invalidQueryParamValue({
+          detail: `Must use a smaller limit per page.`,
+          source: { parameter: "page[limit]" }
+        });
+      }
+    }
 
     const isPaginating =
       mode !== "findOne" &&
@@ -706,6 +718,20 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   getRelationshipNames(typeName) {
     const model = this.getModel(typeName);
     return getReferencePaths(model);
+  }
+
+  /**
+   * This function is called by the registry for each type registered.
+   * It provides the adapter information on the maximum number of resources
+   * that can validly be requested in a FindQuery of the given `type`.
+   */
+  setRegistryDerivedOptions(typeName: string, opts: { maxPageSize?: number }) {
+    if(opts.maxPageSize) {
+        this.maxPageSizes = {
+        ...this.maxPageSizes,
+        [typeName]: opts.maxPageSize
+      };
+    }
   }
 
   doQuery(

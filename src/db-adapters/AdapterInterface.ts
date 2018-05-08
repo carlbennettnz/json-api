@@ -48,6 +48,7 @@ export interface AdapterInstance<T extends new (...args: any[]) => any> {
   getRelationshipNames(typeName: string): string[];
   doQuery(query: any): Promise<FindReturning | CreationReturning | UpdateReturning | DeletionReturning | RelationshipUpdateReturning>;
   getTypePaths(items: {type: string, id: string}[]): Promise<TypeIdMapOf<TypeInfo>>
+  setRegistryDerivedOptions(typeName: string, opts: { maxPageSize?: number }): void;
 };
 
 export interface AdapterClass {

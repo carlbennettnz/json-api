@@ -1,5 +1,6 @@
 import chai = require("chai");
 import chaiSubset = require("chai-subset");
+import { minimalDummyAdapter } from './fixtures';
 import ResourceTypeRegistry, {
   ResourceTypeDescription,
   ResourceTypeInfo
@@ -8,12 +9,15 @@ import { RFC6570String } from "../../src/types/UrlTemplate";
 
 chai.use(chaiSubset);
 const expect = chai.expect;
+
 const makeGetterTest = function(value: any, type: string, methodName: string) {
   return function() {
     const registry = new ResourceTypeRegistry({
       [type]: {
         [methodName]: value
       }
+    }, {
+      dbAdapter: minimalDummyAdapter
     });
 
     // You may get a copy of the set object back, not a direct
@@ -40,7 +44,7 @@ describe("ResourceTypeRegistry", function() {
     it("should register provided resource descriptions", () => {
       const registry = new ResourceTypeRegistry({
         "someType": { info: { "description": "provided to constructor" } }
-      });
+      }, { dbAdapter: minimalDummyAdapter });
 
       const resType = <ResourceTypeDescription>registry.type("someType");
       const resTypeInfo = <ResourceTypeInfo>resType.info;
@@ -55,7 +59,8 @@ describe("ResourceTypeRegistry", function() {
           info: { "example": "merged with the default" }
         }
       }, {
-        info: { description: "provided as default" }
+        info: { description: "provided as default" },
+        dbAdapter: minimalDummyAdapter
       });
 
       const resTypeInfo = <ResourceTypeInfo>(<any>registry.type("someType")).info;
@@ -71,11 +76,13 @@ describe("ResourceTypeRegistry", function() {
         "b": {
           parentType: "a",
           info: { "description": "b" },
-          defaultIncludes: []
+          defaultIncludes: [],
+          dbAdapter: minimalDummyAdapter
         },
         "a": {
           info: { "description": "A", "example": "example from a" },
-          defaultIncludes: <string[]><any>null
+          defaultIncludes: <string[]><any>null,
+          dbAdapter: minimalDummyAdapter
         }
       });
 
@@ -99,6 +106,7 @@ describe("ResourceTypeRegistry", function() {
         "someType": someTypeDesc
       }, {
         beforeSave: (resource: any, req: any, res: any) => { return resource; },
+        dbAdapter: minimalDummyAdapter
       });
 
       expect((<any>registry.type("someType")).beforeSave).to.equal(someTypeDesc.beforeSave);
@@ -109,7 +117,8 @@ describe("ResourceTypeRegistry", function() {
         "testType": { transformLinkage: false },
         "testType2": { }
       }, {
-        transformLinkage: true
+        transformLinkage: true,
+        dbAdapter: minimalDummyAdapter
       });
 
       const testTypeOutput =  <ResourceTypeDescription>registry.type("testType");
@@ -123,7 +132,7 @@ describe("ResourceTypeRegistry", function() {
       const typeDescs = Object.create({
         prototypeKey: {}
       }, {
-        legitDesc: { value: {}, enumerable: true },
+        legitDesc: { value: { dbAdapter: minimalDummyAdapter }, enumerable: true },
         nonEnumerableKey: { value: {}, enumerable: false }
       });
 
@@ -140,7 +149,8 @@ describe("ResourceTypeRegistry", function() {
         "info": null
       }
     }, {
-      "info": { example: "s" }
+      info: { example: "s" },
+      dbAdapter: minimalDummyAdapter
     });
 
     expect(registry.info("testType")).to.equal(null);
@@ -151,8 +161,8 @@ describe("ResourceTypeRegistry", function() {
       const aTemps = {"self": ""};
       const bTemps = {"related": ""};
       const typeDescs = {
-        "a": {"urlTemplates": aTemps},
-        "b": {"urlTemplates": bTemps}
+        "a": { urlTemplates: aTemps, dbAdapter: minimalDummyAdapter },
+        "b": { urlTemplates: bTemps, dbAdapter: minimalDummyAdapter }
       };
       const registry = new ResourceTypeRegistry(typeDescs);
       const templatesOut = registry.urlTemplates();
@@ -168,6 +178,8 @@ describe("ResourceTypeRegistry", function() {
     it("should be a getter for a type's parsed urlTemplates", () => {
       const registry = new ResourceTypeRegistry({
         "mytypes": { urlTemplates: {"path": "test template"} }
+      }, {
+        dbAdapter: minimalDummyAdapter
       });
 
       // tslint:disable-next-line no-non-null-assertion
@@ -183,7 +195,7 @@ describe("ResourceTypeRegistry", function() {
     it("should be a getter, while returning parsed templates", () => {
       const registry = new ResourceTypeRegistry(
         {},
-        {},
+        { dbAdapter: minimalDummyAdapter },
         { urlTemplates: { about: "http://google.com/" } }
       );
 
@@ -193,8 +205,13 @@ describe("ResourceTypeRegistry", function() {
   })
 
   describe("adapter", () => {
+    const adapterClone = {
+      ...minimalDummyAdapter,
+      constructor: function() { return; }
+    };
+
     it("should be a getter for a type's db adapter",
-      makeGetterTest(function() { return; }, "mytypes", "dbAdapter")
+      makeGetterTest(adapterClone, "mytypes", "dbAdapter")
     );
   });
 
@@ -223,6 +240,8 @@ describe("ResourceTypeRegistry", function() {
       "organizations": {},
       "people": {},
       "law-schools": { parentType: "schools" }
+    }, {
+      dbAdapter: minimalDummyAdapter
     });
 
     describe("parentTypeName", () => {

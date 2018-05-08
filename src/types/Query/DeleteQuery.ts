@@ -17,6 +17,7 @@ export default class DeleteQuery extends WithCriteriaQuery {
       limit?: WithCriteriaQueryOptions["limit"];
       offset?: WithCriteriaQueryOptions["offset"];
     };
+    ignoreLimitMax: boolean;
   };
 
   constructor(opts: WithCriteriaQueryOptions) {

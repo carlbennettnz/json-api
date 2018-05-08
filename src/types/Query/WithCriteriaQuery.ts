@@ -20,10 +20,12 @@ export type WithCriteriaQueryOptions = QueryOptions & {
   filters?: FieldExpression[];
   ids?: string[];
   id?: string;
+  ignoreLimitMax?: boolean;
 };
 
 export default class WithCriteriaQuery extends Query {
   protected query: QueryOptions & {
+    ignoreLimitMax: boolean;
     criteria: {
       where: AndExpression;
       isSingular: boolean;
@@ -52,7 +54,8 @@ export default class WithCriteriaQuery extends Query {
         isSingular: opts.isSingular || opts.id !== undefined,
         limit: opts.limit,
         offset: opts.offset
-      }
+      },
+      ignoreLimitMax: opts.ignoreLimitMax || false
     };
 
     if(opts.ids || opts.id) {
@@ -192,5 +195,27 @@ export default class WithCriteriaQuery extends Query {
 
   get isSingular() {
     return this.query.criteria.isSingular;
+  }
+
+  get ignoreLimitMax() {
+    return this.query.ignoreLimitMax;
+  }
+
+  withLimit(limit: number | undefined) {
+    const res = this.clone();
+    res.query.criteria.limit = limit;
+    return res;
+  }
+
+  withMaxLimit() {
+    const res = this.clone();
+    res.query.ignoreLimitMax = false;
+    return res;
+  }
+
+  withoutMaxLimit() {
+    const res = this.clone();
+    res.query.ignoreLimitMax = true;
+    return res;
   }
 }

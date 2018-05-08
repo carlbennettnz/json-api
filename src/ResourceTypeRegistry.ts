@@ -23,7 +23,8 @@ export { Resource, ResourceIdentifier, TransformFn, IncomingMessage, ServerRespo
  * into the values provided in each resource type description.
  */
 const globalResourceDefaults = Immutable.fromJS({
-  transformLinkage: false
+  transformLinkage: false,
+  pagination: {}
 }) as Immutable.Map<string, any>;
 
 // We allow strings when a template is provided,
@@ -54,6 +55,7 @@ export type ResourceTypeDescription = {
   beforeSave?: ResourceTransformFn | FullTransformFn;
   beforeRender?: BeforeRenderResourceTransformFn | BeforeRenderFullTransformFn;
   transformLinkage?: boolean;
+  pagination?: { maxPageSize?: number; defaultPageSize?: number };
 };
 
 export type ResourceTypeDescriptions = {
@@ -154,7 +156,19 @@ export default class ResourceTypeRegistry {
         ? this._types[parentType]! // tslint:disable-line no-non-null-assertion
         : instanceDefaults;
 
-      this._types[typeName] = thisDescBase.mergeDeep(thisDescImmutable);
+      const finalDesc = thisDescBase.mergeDeep(thisDescImmutable);
+      const maxPageSize = finalDesc.getIn(["pagination", "maxPageSize"]);
+
+      // Register the type
+      this._types[typeName] = finalDesc;
+
+      // And alert the adapter about it as needed.
+      // If this call blows up (because there's no adapter or it doesn't define
+      // setRegistryDerivedOptions), then good, because those those are required.
+      finalDesc.get("dbAdapter").setRegistryDerivedOptions(
+        typeName,
+        typeof maxPageSize !== 'undefined' ? { maxPageSize } : { }
+      );
     });
   }
 
@@ -189,15 +203,10 @@ export default class ResourceTypeRegistry {
   }
 
   dbAdapter(typeName: string) {
-    const adapter = this.doGet("dbAdapter", typeName);
-    if(typeof adapter === 'undefined') {
-      throw new Error(
-        "Tried to get db adapter for a type registered without one. " +
-        "Every type must be registered with an adapter!"
-      );
-    }
-
-    return adapter;
+    // We can safely use the non null assertion because, if adapter is missing,
+    // attempting to call setRegistryDerivedOptions will fail in constructor.
+    // tslint:disable-next-line no-non-null-assertion
+    return this.doGet("dbAdapter", typeName)!;
   }
 
   uniqueAdapters() {
@@ -235,6 +244,12 @@ export default class ResourceTypeRegistry {
 
   parentTypeName(typeName: string) {
     return this.doGet("parentType", typeName);
+  }
+
+  pagination(typeName: string) {
+    // Non-null because the global defaults make this at least an empty object.
+    // tslint:disable-next-line no-non-null-assertion
+    return this.doGet("pagination", typeName)!;
   }
 
   typeNames() {

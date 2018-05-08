@@ -64,6 +64,18 @@ describe("MongooseAdapter", () => {
       ]);
     });
 
+    it("should enforce a FindQuery max limit, unless user explicitly opts-out", () => {
+      return Promise.all([
+        Agent.request("GET", "/schools/all"),
+        Agent.request("GET", "/schools/custom-illegal-max").then(() => {
+          throw new Error("Should not run");
+        }, (e) => {
+          expect(e.status).to.equal(400);
+          expect(e.response.body.errors[0].detail).to.match(/limit/);
+        })
+      ]);
+    })
+
     // Not supported atm.
     it.skip("should support reversing the sort order of `geoDistance`");
 

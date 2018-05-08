@@ -23,6 +23,7 @@ export default class FindQuery extends WithCriteriaQuery {
       limit?: FindQueryOptions["limit"];
       offset?: FindQueryOptions["offset"];
     };
+    ignoreLimitMax: boolean;
   };
 
   constructor({ populates, select, sort, ...baseOpts }: FindQueryOptions) {
