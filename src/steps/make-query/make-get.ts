@@ -20,7 +20,7 @@ export default function(request: FinalizedRequest, registry: ResourceTypeRegistr
 
     const {
       include = registry.defaultIncludes(type),
-      page: { offset = undefined, limit = registry.pagination(type).defaultPageSize } = {},
+      page: { offset = undefined, limit = registry.pagination(type).defaultPageSize } = {}, // tslint:disable-line no-unnecessary-initializer
       fields,
       sort,
       filter
