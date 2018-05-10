@@ -162,7 +162,9 @@ export default class APIController {
     // valid operators. That may lead to some parse errors, but it's probably
     // better than erroring unconditionally (even if no filters are in use).
     const finalizedSupportedOperators = this.registry.hasType(request.type)
-      ? this.getFinalizedSupportedOperators(this.registry.dbAdapter(request.type))
+      // Adapter cannot be null as long as the type exists, and we've just checked that it does
+      // tslint:disable-next-line no-non-null-assertion
+      ? this.getFinalizedSupportedOperators(this.registry.dbAdapter(request.type)!)
       : { filter: {}, sort: {} };
 
     // Handle query parsing errors in the same manner, whether they're thrown

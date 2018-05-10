@@ -87,7 +87,9 @@ export default class DocumentationController {
   // Clients can extend this if, say, the adapter can't infer
   // as much info about the models' structure as they would like.
   getTypeInfo(type) {
-    const adapter   = this.registry.dbAdapter(type);
+    // Adapter cannot be null as long as the type exists
+    // tslint:disable-next-line no-non-null-assertion
+    const adapter   = this.registry.dbAdapter(type)!;
     const model     = adapter.getModel(type);
     const modelName = this.toModelName(type);
 

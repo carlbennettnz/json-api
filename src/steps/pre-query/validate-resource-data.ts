@@ -16,7 +16,9 @@ export default function(data: ResourceSet, registry: ResourceTypeRegistry) {
   // attributes, that's a case that we can identify here and throw for.
   // tslint:disable-next-line forin
   for(const type in resourcesByChildMostType) {
-    const adapter = registry.dbAdapter(type);
+    // Adapter cannot be null as long as the type exists
+    // tslint:disable-next-line no-non-null-assertion
+    const adapter = registry.dbAdapter(type)!;
     const resources = resourcesByChildMostType[type];
     const relationshipNames = adapter.getRelationshipNames(type);
 

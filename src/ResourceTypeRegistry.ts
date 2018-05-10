@@ -203,16 +203,15 @@ export default class ResourceTypeRegistry {
   }
 
   dbAdapter(typeName: string) {
-    // We can safely use the non null assertion because, if adapter is missing,
-    // attempting to call setRegistryDerivedOptions will fail in constructor.
-    // tslint:disable-next-line no-non-null-assertion
-    return this.doGet("dbAdapter", typeName)!;
+    return this.doGet("dbAdapter", typeName);
   }
 
   uniqueAdapters() {
     const adaptersToTypeNames = new Map<AdapterInstance<any>, string[]>();
     Object.keys(this._types).map(typeName => {
-      const adapter = this.dbAdapter(typeName);
+      // Cannot be null as long as the type exists, and we know that it does
+      // tslint:disable-next-line no-non-null-assertion
+      const adapter = this.dbAdapter(typeName)!;
       adaptersToTypeNames.set(
         adapter,
         (adaptersToTypeNames.get(adapter) || []).concat(typeName)
