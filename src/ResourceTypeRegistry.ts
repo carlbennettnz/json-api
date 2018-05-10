@@ -1,4 +1,5 @@
 import Immutable = require("immutable");
+import * as assert from 'assert';
 import mapObject = require("lodash/mapValues"); //tslint:disable-line no-submodule-imports
 import { pseudoTopSort } from "./util/misc";
 import Maybe from "./types/Generic/Maybe";
@@ -156,19 +157,8 @@ export default class ResourceTypeRegistry {
         ? this._types[parentType]! // tslint:disable-line no-non-null-assertion
         : instanceDefaults;
 
-      const finalDesc = thisDescBase.mergeDeep(thisDescImmutable);
-      const maxPageSize = finalDesc.getIn(["pagination", "maxPageSize"]);
-
-      // Register the type
-      this._types[typeName] = finalDesc;
-
-      // And alert the adapter about it as needed.
-      // If this call blows up (because there's no adapter or it doesn't define
-      // setRegistryDerivedOptions), then good, because those those are required.
-      finalDesc.get("dbAdapter").setRegistryDerivedOptions(
-        typeName,
-        typeof maxPageSize !== 'undefined' ? { maxPageSize } : { }
-      );
+      this._types[typeName] = thisDescBase.mergeDeep(thisDescImmutable);
+      assert(this._types[typeName], 'All resource types must have a database adapter.');
     });
   }
 

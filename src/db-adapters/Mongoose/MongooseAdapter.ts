@@ -62,7 +62,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   // models keyed by model name b/c that's how mongoose stores them.
   protected typeNamesToModelNames: { [typeName: string]: string | undefined };
   protected modelNamesToTypeNames: { [modelName: string]: string | undefined };
-  protected maxPageSizes: { [typeName: string]: number } = {};
 
   constructor(
     protected models: { [modelName: string]: Model<any> } = (mongoose as any).models,
@@ -110,8 +109,8 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
       select: fields,
       sort: sorts,
       offset,
-      isSingular: singular,
-      ignoreLimitMax
+      limit,
+      isSingular: singular
     } = query;
 
     const mode = singular ? "findOne" : "find";
@@ -120,22 +119,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
     const model = this.getModel(type);
 
     this.constructor.assertIdsValid(filters, singular);
-
-    // Enforce max limit if necessary.
-    let { limit } = query;
-    const maxLimit = this.maxPageSizes[type];
-    if(typeof maxLimit === 'number' && !ignoreLimitMax) {
-      if(typeof limit === 'undefined') {
-        limit = maxLimit;
-      }
-
-      else if (limit > maxLimit) {
-        throw Errors.invalidQueryParamValue({
-          detail: `Must use a smaller limit per page.`,
-          source: { parameter: "page[limit]" }
-        });
-      }
-    }
 
     const isPaginating =
       mode !== "findOne" &&
@@ -718,40 +701,6 @@ export default class MongooseAdapter implements Adapter<typeof MongooseAdapter> 
   getRelationshipNames(typeName) {
     const model = this.getModel(typeName);
     return getReferencePaths(model);
-  }
-
-  /**
-   * This function is called by the registry for each type registered.
-   * It provides the adapter information on the maximum number of resources
-   * that can validly be requested in a FindQuery of the given `type`.
-   */
-  setRegistryDerivedOptions(typeName: string, opts: { maxPageSize?: number }) {
-    if(opts.maxPageSize) {
-        this.maxPageSizes = {
-        ...this.maxPageSizes,
-        [typeName]: opts.maxPageSize
-      };
-    }
-  }
-
-  doQuery(
-    query: CreateQuery | FindQuery | UpdateQuery | DeleteQuery |
-      AddToRelationshipQuery | RemoveFromRelationshipQuery
-  ) {
-    const method = (
-      (query instanceof CreateQuery && this.create) ||
-      (query instanceof FindQuery && this.find) ||
-      (query instanceof DeleteQuery && this.delete) ||
-      (query instanceof UpdateQuery && this.update) ||
-      (query instanceof AddToRelationshipQuery && this.addToRelationship) ||
-      (query instanceof RemoveFromRelationshipQuery && this.removeFromRelationship)
-    );
-
-    if(!method) {
-      throw new Error("Unexpected query type.");
-    }
-
-    return method.call(this, query);
   }
 
   /**

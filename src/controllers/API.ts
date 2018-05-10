@@ -39,6 +39,7 @@ import validateRequestResourceTypes from "../steps/pre-query/validate-resource-t
 import validateRequestResourceIds from "../steps/pre-query/validate-resource-ids";
 import validateRequestResourceData from "../steps/pre-query/validate-resource-data";
 import makeTransformFunction, { TransformMode, Transformable } from "../steps/make-transform-fn";
+import runQuery from '../steps/run-query';
 
 import makeGET from "../steps/make-query/make-get";
 import makePOST from "../steps/make-query/make-post";
@@ -436,9 +437,8 @@ export default class APIController {
       }
 
       logger.info("Executing request query");
-      const adapter = opts.registry.dbAdapter(query.type);
-      const result =
-        await adapter.doQuery(query).then(query.returning, query.catch);
+      const result = await runQuery(opts.registry, query)
+        .then(query.returning, query.catch);
 
       // add top level self link pre send.
       if(result.document && result.document.primary) {
