@@ -3,7 +3,7 @@ import * as td from 'testdouble';
 
 import runQuery from '../../../src/steps/run-query'
 import ResourceTypeRegistry from "../../../src/ResourceTypeRegistry";
-import MongooseAdapter from '../../../src/db-adapters/Mongoose/MongooseAdapter';
+import MongooseAdapter from "@json-api/mongoose-adapter";
 
 import {
   FindQuery,

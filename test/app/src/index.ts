@@ -15,7 +15,7 @@ import {
 import { RunnableQuery } from "../../../src/steps/run-query";
 import { QueryBuildingContext } from "../../../src/controllers/API";
 import ExpressStrategy from "../../../src/http-strategies/Express";
-import MongooseAdapter from '../../../src/db-adapters/Mongoose/MongooseAdapter';
+import MongooseAdapter from '@json-api/mongoose-adapter';
 import { Express } from "express";
 export { Express, QueryBuildingContext, ExpressStrategy, MongooseAdapter };
 
@@ -23,13 +23,13 @@ export { Express, QueryBuildingContext, ExpressStrategy, MongooseAdapter };
  * Export a promise for the app and the constructed front controller.
  */
 export default database.then(function(dbModule) {
-  const adapter = new API.dbAdapters.Mongoose(dbModule.models());
+  const adapter = new MongooseAdapter(dbModule.models());
   const registry = new API.ResourceTypeRegistry({
     "people": require("./resource-descriptions/people"),
     "organizations": require("./resource-descriptions/organizations"),
     "schools": require("./resource-descriptions/schools")
   }, {
-    dbAdapter: adapter
+    dbAdapter: adapter as any
   }, {
     urlTemplates: {
       about: "https://google.com/?x={code}"
