@@ -7,7 +7,6 @@
  * The imports for the getter-protected values (i.e., MongooseAdapter, KoaStrategy,
  * etc.) just bring in type information; they're not part of the compiled output.
  */
-import MongooseAdapter from "./db-adapters/Mongoose/MongooseAdapter";
 import ExpressStrategy from "./http-strategies/Express";
 import KoaStrategy from "./http-strategies/Koa";
 
@@ -63,12 +62,6 @@ export {
   defaultSortParamParser, defaultFilterParamParser
 };
 
-export const dbAdapters = {
-  get Mongoose() {
-    return <typeof MongooseAdapter>require("./db-adapters/Mongoose/MongooseAdapter").default;
-  }
-};
-
 export const httpStrategies = {
   get Express() {
     return <typeof ExpressStrategy>require("./http-strategies/Express").default;
@@ -118,7 +111,6 @@ const defaultExp = {
   types,
   controllers,
   httpStrategies,
-  dbAdapters,
   helpers,
   displaySafeError,
   RFC6570String,
